@@ -1,44 +1,86 @@
-#player can input a number, and the other player can guess. 
-#This script was imported from Replit as well as the the clear function. To use this program, update clear function according to your IDE.
+from tkinter import *
+import math
 
-from art import logo
-import random
-from replit import clear
+# ---------------------------- CONSTANTS ------------------------------- #
+PINK = "#e2979c"
+RED = "#e7305b"
+GREEN = "#9bdeac"
+YELLOW = "#f7f5dd"
+FONT_NAME = "Courier"
+WORK_MIN = 25
+SHORT_BREAK_MIN = 5
+LONG_BREAK_MIN = 20
+reps = 0
+timer = None
 
-def game():
-  print(logo)
-  print("Welcome to the 'Guess a Number' game!")
-  player_1 = input("Player 1, please input your name: ").title()
-  player_2 = input("Player 2, please input your name: ").title()
-  set_num = int(input(f"{player_1}, please input a number between 0 and 100 for {player_2} to guess: "))    
-  clear()
-  print(f"{player_2}, now it's time to guess the number!")
-  #randomly pick a number for player to guess
-  #let user choose difficulty level and set reamining chances to 5 or 10 
-  if input("Type 'easy or 'hard' to choose a difficulty level: ").lower() == "easy":
-    chance_remain = 10
-    print("You will have 10 chances to guess the right number!")
-  else:
-    chance_remain = 5
-    print("You will have 5 chances to guess the right number!")
-  #ask user to input guess
-  while chance_remain >= 1:
-    guess_num = int(input("Please make a guess: "))
-    if guess_num > set_num:
-      chance_remain -= 1
-      print("You guessed too large.")
-      print(f"You have {chance_remain} chances left.")
-    elif guess_num < set_num:
-      chance_remain -= 1
-      print("You guessed too small.")
-      print(f"You have {chance_remain} chances left.")
+# ---------------------------- TIMER RESET ------------------------------- #
+def reset_timer():
+    window.after_cancel(timer)
+    title.config(text="Timer")
+    canvas.itemconfig(timer_text, text="0:00")
+    checkmark.config(text="")
+    global reps
+    reps = 0
+
+# ---------------------------- TIMER MECHANISM ------------------------------- # 
+def start_timer():
+    global reps
+    reps += 1
+    work_sec = WORK_MIN * 60
+    short_break_sec = SHORT_BREAK_MIN * 60
+    long_break_sec = LONG_BREAK_MIN * 60
+    if reps == 8:
+        count_down(long_break_sec)
+        title.config(text="Break", fg=RED)
+    elif reps % 2 == 0:
+        count_down(short_break_sec)
+        title.config(text="Break", fg=PINK)
     else:
-      print(f"You win! The number is {set_num}, you guessed the right number!")
-      break
-  #if chance used up, tell user that he lose
-  if chance_remain == 0:
-    print(f"Sorry, you used up all guesses, {player_1} is the winner.")
-#refresh the page and start new game      
-while input("Type 'Y' to start the 'Guess a Number' game, type 'N' to exit: ").lower() == "y":
-  clear()
-  game()
+        count_down(work_sec)
+        title.config(text="Work", fg=GREEN)
+
+# ---------------------------- COUNTDOWN MECHANISM ------------------------------- # 
+def count_down(count):
+    count_min = math.floor(count/60)
+    count_sec = count % 60
+    if count_sec < 10:
+        count_sec = f"0{count_sec}"
+    canvas.itemconfig(timer_text, text=f"{count_min}:{count_sec}")
+    if count > 0:
+        global timer
+        timer = window.after(1000, count_down, count - 1)
+    else:
+        start_timer()
+        marks = ""
+        for _ in range(0, math.floor(reps/2)):
+            marks += "✓"
+        checkmark.config(text=marks)
+
+# ---------------------------- UI SETUP ------------------------------- #
+window = Tk()
+window.title("Jenny's Pomodoro")
+window.config(padx=100, pady=50, bg=YELLOW)
+
+
+#set up "Timer" text on top of tomato
+title = Label(text="Timer", font=(FONT_NAME, 45, "bold"), bg=YELLOW, fg=GREEN)
+title.grid(column=1, row=0)
+
+#set up check mark
+checkmark = Label(text="✓", font=(FONT_NAME, 15, "bold"), fg=GREEN, bg=YELLOW)
+checkmark.grid(column=1, row=3)
+
+#set up timer 00:00 in middle of tomato
+canvas = Canvas(window, width=200, height=224, bg=YELLOW, highlightthickness=0)
+tomato_img = PhotoImage(file="tomato.png")
+canvas.create_image(100, 112, image=tomato_img)
+timer_text = canvas.create_text(100, 130, text="0:00", font=(FONT_NAME, 25, "bold"), fill="white")
+canvas.grid(column=1, row=1)
+
+#set up two buttons
+start_button = Button(text="Start", command=start_timer)
+start_button.grid(column=0, row=2)
+reset_button = Button(text="Reset", command=reset_timer)
+reset_button.grid(column=2, row=2)
+
+window.mainloop()
