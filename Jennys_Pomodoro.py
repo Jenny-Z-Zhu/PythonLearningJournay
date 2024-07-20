@@ -1,3 +1,8 @@
+"""To enhance your productivity:
+a sweet cute timer that count down your work time for 25 mins,
+then it gives you 5 mins short break, 
+after 4 reps it gives you a long 20 mins break"""
+
 from tkinter import *
 import math
 
